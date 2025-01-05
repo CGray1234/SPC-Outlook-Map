@@ -33,7 +33,7 @@ class outlookToggle {
 
             if ((daySelection.selectedIndex + 1) < 3 && riskSelection.options[1].text == 'Probabilistic') {
                 riskSelection.options[1].text = 'Tornado';
-                riskSelection.options[1].value = 'Tornado';
+                riskSelection.options[1].value = 'tor';
 
                 const windOption = document.createElement('option');
                 windOption.text = 'Wind';
