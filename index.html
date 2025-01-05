@@ -19,13 +19,44 @@
             bottom: 0;
             width: 100%;
         }
+
+        #dropdownsContainer {
+            background-color: gray;
+            padding: 5px;
+        }
+
+        #day-dropdown {
+            margin-right: 5px;
+            font-size: 1.1rem;
+        }
+
+        #outlook-dropdown {
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 
 <body>
-    <div id="map"></div>
+    <div id="dropdownsContainer" class="mapboxgl-ctrl mapboxgl-ctrl-group">
+        <select id="day-dropdown">
+            <option value="day1">Day 1</option>
+            <option value="day2">Day 2</option>
+            <option value="day3">Day 3</option>
+            <option value="day4">Day 4</option>
+            <option value="day5">Day 5</option>
+            <option value="day6">Day 6</option>
+            <option value="day7">Day 7</option>
+            <option value="day8">Day 8</option>
+        </select>
+        <select id="outlook-dropdown">
+            <option value="cat" selected>Categorical</option>
+            <option value="torn">Tornado</option>
+            <option value="wind">Wind</option>
+            <option value="hail">Hail</option>
+        </select>
+    </div>
+    <div id="map" style="z-index: 1;"></div>
     <script src="./yes.js" type="module"></script>
-
 </body>
 
 </html>

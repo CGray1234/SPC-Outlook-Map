@@ -7,163 +7,101 @@ const map = new mapboxgl.Map({
     zoom: 4 // starting zoom
 });
 
-map.on('load', () => {
-    map.addSource('day1conv', {
-        type: 'geojson',
-        data: 'https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson'
-    });
+const selectionContainer = document.getElementById('dropdownsContainer');
+const daySelection = document.getElementById('day-dropdown');
+const riskSelection = document.getElementById('outlook-dropdown');
 
-    map.addSource('day1torn', {
-        type: 'geojson',
-        data: 'https://www.spc.noaa.gov/products/outlook/day1otlk_torn.nolyr.geojson'
-    });
-
-    map.addSource('day1wind', {
-        type: 'geojson',
-        data: 'https://www.spc.noaa.gov/products/outlook/day1otlk_wind.nolyr.geojson'
-    });
-
-    map.addSource('day1hail', {
-        type: 'geojson',
-        data: 'https://www.spc.noaa.gov/products/outlook/day1otlk_hail.nolyr.geojson'
-    });
-
-    map.addSource('day2conv', {
-        type: 'geojson',
-        data: 'https://www.spc.noaa.gov/products/outlook/day2otlk_cat.nolyr.geojson'
-    });
-
-    map.addSource('day2torn', {
-        type: 'geojson',
-        data: 'https://www.spc.noaa.gov/products/outlook/day2otlk_torn.nolyr.geojson'
-    });
-
-    map.addSource('day2wind', {
-        type: 'geojson',
-        data: 'https://www.spc.noaa.gov/products/outlook/day2otlk_wind.nolyr.geojson'
-    });
-
-    map.addSource('day2hail', {
-        type: 'geojson',
-        data: 'https://www.spc.noaa.gov/products/outlook/day2otlk_hail.nolyr.geojson'
-    });
-
-    map.addSource('day3conv', {
-        type: 'geojson',
-        data: 'https://www.spc.noaa.gov/products/outlook/day3otlk_cat.nolyr.geojson'
-    });
-
-    map.addSource('day3prob', {
-        type: 'geojson',
-        data: 'https://www.spc.noaa.gov/products/outlook/day3otlk_prob.nolyr.geojson'
-    });
-})
-
-// Day 1
 class outlookToggle {
-    constructor(type, day) {
-        this.type = type;
-        this.day = day;
-    }
-
     onAdd(map) {
         this.map = map;
 
-        let fullType;
-
-        if (this.type == 'conv') {
-            fullType = 'Convective';
-        } else if (this.type == 'torn') {
-            fullType = 'Tornado';
-        } else if (this.type == 'wind') {
-            fullType = 'Wind';
-        } else if (this.type == 'hail') {
-            fullType = 'Hail';
-        } else if (this.type == 'prob') {
-            fullType = 'Probabilistic';
-        }
-
-        this.container = document.createElement('div');
+        this.container = selectionContainer;
         this.container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
 
-        const button = document.createElement('button');
-        button.innerHTML = `Day ${this.day} ${fullType}`;
-        button.style.width = 'fit-content';
-        button.style.height = 'fit-content';
-        button.style.padding = '5px'
+        refreshOutlook(1, 'cat');
 
-        button.addEventListener('click', () => {
-            const activeLayer = `day${this.day}${this.type}`;
-            const activeOutlineLayer = `${activeLayer}-outline`;
+        daySelection.addEventListener('change', () => {
+            refreshOutlook(daySelection.selectedIndex + 1, riskSelection.options[riskSelection.selectedIndex].value);
 
-            if (this.map.getLayer(activeLayer)) {
-                this.map.removeLayer(activeLayer);
-                this.map.removeLayer(activeOutlineLayer);
-                return;
+            if ((daySelection.selectedIndex + 1) >= 3 && riskSelection.options[1].text == 'Tornado') {
+                for (let i = 1; i < 3; i++) {
+                    riskSelection.options.remove(i);
+                }
+                riskSelection.options[1].value = 'prob';
+                riskSelection.options[1].text = 'Probabilistic';
             }
 
-            this.map.getStyle().layers.forEach((layer) => {
-                if (layer.id.includes('day')) {
-                    map.removeLayer(layer.id);
-                }
-            });
+            if ((daySelection.selectedIndex + 1) < 3 && riskSelection.options[1].text == 'Probabilistic') {
+                riskSelection.options[1].text = 'Tornado';
+                riskSelection.options[1].value = 'Tornado';
 
-            map.addLayer({
-                'id': `day${this.day}${this.type}`,
-                'type': 'fill',
-                'source': `day${this.day}${this.type}`,
-                paint: {
-                    'fill-color': ['get', 'fill'],
-                    'fill-opacity': 0.5,
-                }
-            });
+                const windOption = document.createElement('option');
+                windOption.text = 'Wind';
+                windOption.value = 'wind';
+                riskSelection.add(windOption);
 
-            map.addLayer({
-                'id': `day${this.day}${this.type}-outline`,
-                'type': 'line',
-                'source': `day${this.day}${this.type}`,
-                paint: {
-                    'line-color': ['get', 'stroke'],
-                }
-            });
+                const hailOption = document.createElement('option');
+                hailOption.text = 'Hail';
+                hailOption.value = 'hail';
+                riskSelection.add(hailOption);
+            }
         });
 
-        this.container.appendChild(button);
+        riskSelection.addEventListener('change', () => {
+            refreshOutlook(daySelection.selectedIndex + 1, riskSelection.options[riskSelection.selectedIndex].value)
+        });
+
+        this.container.appendChild(daySelection);
+        this.container.appendChild(riskSelection);
         return this.container;
     }
 
     onRemove() {
-        this.container.parentNode.removeChild(this.container);
         this.map = undefined;
     }
 }
 
-const day1convButton = new outlookToggle('conv', 1);
-map.addControl(day1convButton, 'top-left');
+map.on('load', () => {
+    const yes = new outlookToggle();
+    map.addControl(yes, 'top-left');
+});
 
-const day1tornButton = new outlookToggle('torn', 1);
-map.addControl(day1tornButton, 'top-left');
+function refreshOutlook(day, risk) {
+    if (map.getLayer('outlook')) {
+        map.removeLayer('outlook');
+    }
 
-const day1hailButton = new outlookToggle('hail', 1);
-map.addControl(day1hailButton, 'top-left');
+    if (map.getLayer('outlook-outline')) {
+        map.removeLayer('outlook-outline');
+    }
 
-const day1windButton = new outlookToggle('wind', 1);
-map.addControl(day1windButton, 'top-left');
+    if (map.getSource('outlookSource')) {
+        map.removeSource('outlookSource');
+    }
 
-const day2convButton = new outlookToggle('conv', 2);
-map.addControl(day2convButton, 'top-left');
+    map.addSource('outlookSource', {
+        type: 'geojson',
+        data: `https://www.spc.noaa.gov/products/outlook/day${day}otlk_${risk}.nolyr.geojson`
+    });
 
-const day2tornButton = new outlookToggle('torn', 2);
-map.addControl(day2tornButton, 'top-left');
+    map.addLayer({
+        id: 'outlook',
+        type: 'fill',
+        source: 'outlookSource',
+        paint: {
+            'fill-color': ['get', 'fill'],
+            'fill-opacity': 0.5
+        }
+    });
 
-const day2hailButton = new outlookToggle('hail', 2);
-map.addControl(day2hailButton, 'top-left');
+    map.addLayer({
+        id: 'outlook-outline',
+        type: 'line',
+        source: 'outlookSource',
+        paint: {
+            'line-color': ['get', 'stroke'],
+        }
+    });
 
-const day2windButton = new outlookToggle('wind', 2);
-map.addControl(day2windButton, 'top-left');
-
-const day3convButton = new outlookToggle('conv', 3);
-map.addControl(day3convButton, 'top-left');
-
-const day3probButton = new outlookToggle('prob', 3);
-map.addControl(day3probButton, 'top-left');
+    console.log(`https://www.spc.noaa.gov/products/outlook/day${day}otlk_${risk}.nolyr.geojson`)
+}
