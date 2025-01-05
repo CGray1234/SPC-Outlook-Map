@@ -21,34 +21,52 @@ class outlookToggle {
         refreshOutlook(1, 'cat');
 
         daySelection.addEventListener('change', () => {
+            if ((daySelection.selectedIndex + 1) == 3) {
+                removeRiskOptions();
+
+                riskSelection.options[0].text = 'Categorical';
+                riskSelection.options[0].value = 'cat';
+
+                let probSelection = document.createElement('option');
+                probSelection.value = 'prob';
+                probSelection.text = 'Probabilistic';
+                riskSelection.add(probSelection);
+            }
+
+            if ((daySelection.selectedIndex + 1) > 3) {
+                removeRiskOptions();
+
+                riskSelection.options[0].text = 'Probabilistic';
+                riskSelection.options[0].value = 'prob';
+            }
+
+            if ((daySelection.selectedIndex + 1) < 3) {
+                removeRiskOptions();
+
+                riskSelection.options[0].text = 'Categorical';
+                riskSelection.options[0].value = 'cat';
+
+                let torSelection = document.createElement('option');
+                torSelection.value = 'torn';
+                torSelection.text = 'Tornado';
+                riskSelection.add(torSelection);
+
+                let windSelection = document.createElement('option');
+                windSelection.value = 'wind';
+                windSelection.text = 'Wind';
+                riskSelection.add(windSelection);
+
+                let hailSelection = document.createElement('option');
+                hailSelection.value = 'hail';
+                hailSelection.text = 'Hail';
+                riskSelection.add(hailSelection);
+            }
+
             refreshOutlook(daySelection.selectedIndex + 1, riskSelection.options[riskSelection.selectedIndex].value);
-
-            if ((daySelection.selectedIndex + 1) >= 3 && riskSelection.options[1].text == 'Tornado') {
-                for (let i = 1; i < 3; i++) {
-                    riskSelection.options.remove(i);
-                }
-                riskSelection.options[1].value = 'prob';
-                riskSelection.options[1].text = 'Probabilistic';
-            }
-
-            if ((daySelection.selectedIndex + 1) < 3 && riskSelection.options[1].text == 'Probabilistic') {
-                riskSelection.options[1].text = 'Tornado';
-                riskSelection.options[1].value = 'tor';
-
-                const windOption = document.createElement('option');
-                windOption.text = 'Wind';
-                windOption.value = 'wind';
-                riskSelection.add(windOption);
-
-                const hailOption = document.createElement('option');
-                hailOption.text = 'Hail';
-                hailOption.value = 'hail';
-                riskSelection.add(hailOption);
-            }
         });
 
         riskSelection.addEventListener('change', () => {
-            refreshOutlook(daySelection.selectedIndex + 1, riskSelection.options[riskSelection.selectedIndex].value)
+            refreshOutlook(daySelection.selectedIndex + 1, riskSelection.options[riskSelection.selectedIndex].value);
         });
 
         this.container.appendChild(daySelection);
@@ -58,6 +76,13 @@ class outlookToggle {
 
     onRemove() {
         this.map = undefined;
+    }
+}
+
+function removeRiskOptions() {
+    var i, L = riskSelection.options.length - 1;
+    for (i = L; i > 0; i--) {
+        riskSelection.remove(i);
     }
 }
 
@@ -79,10 +104,17 @@ function refreshOutlook(day, risk) {
         map.removeSource('outlookSource');
     }
 
-    map.addSource('outlookSource', {
-        type: 'geojson',
-        data: `https://www.spc.noaa.gov/products/outlook/day${day}otlk_${risk}.nolyr.geojson`
-    });
+    if (day <= 3) {
+        map.addSource('outlookSource', {
+            type: 'geojson',
+            data: `https://www.spc.noaa.gov/products/outlook/day${day}otlk_${risk}.nolyr.geojson`
+        });
+    } else {
+        map.addSource('outlookSource', {
+            type: 'geojson',
+            data: `https://www.spc.noaa.gov/products/exper/day4-8/day${day}prob.nolyr.geojson`
+        });
+    }
 
     map.addLayer({
         id: 'outlook',
