@@ -124,7 +124,7 @@ function refreshOutlook(day, risk) {
             'fill-color': ['get', 'fill'],
             'fill-opacity': 0.5
         }
-    });
+    }, 'admin-1-boundary-bg');
 
     map.addLayer({
         id: 'outlook-outline',
@@ -133,7 +133,7 @@ function refreshOutlook(day, risk) {
         paint: {
             'line-color': ['get', 'stroke'],
         }
-    });
+    }, 'admin-1-boundary-bg');
 
     console.log(`https://www.spc.noaa.gov/products/outlook/day${day}otlk_${risk}.nolyr.geojson`)
 }
